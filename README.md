@@ -55,3 +55,10 @@ En este archivo se describen algunos detalles del backend para el sistema de res
 1. Si hay una excepción (`exceptions`) para esa fecha. (Prioridad máxima).
 2. Si no, ¿qué dice `availability_rules` para ese día de la semana?
 3. Si está dentro del horario, ¿hay alguna reserva o bloqueo que se cruce en `reservations`?
+
+## Corriendo el proyecto
+
+### usuario admin
+
+-   email: admin@admin.com
+-   password: admin
