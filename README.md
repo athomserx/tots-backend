@@ -61,4 +61,4 @@ En este archivo se describen algunos detalles del backend para el sistema de res
 ### usuario admin
 
 -   email: admin@admin.com
--   password: admin
+-   password: password

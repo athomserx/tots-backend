@@ -2,11 +2,10 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
 /**
  * @property int $id
@@ -16,10 +15,10 @@ use Illuminate\Notifications\Notifiable;
  * @property string $phone
  * @property int $role_id
  */
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -65,5 +64,21 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role->name === 'admin';
+    }
+
+    /**
+     * Get the identifier that will be stored in the JWT token (sub claim).
+     */
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    /**
+     * Return an array with custom claims to be added to the JWT token.
+     */
+    public function getJWTCustomClaims()
+    {
+        return ['role' => $this->role->id, 'name' => $this->name, 'phone' => $this->phone];
     }
 }
