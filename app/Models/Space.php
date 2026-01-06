@@ -19,6 +19,7 @@ class Space extends Model
         'description',
         'price_per_hour',
         'capacity',
+        'type',
         'images'
     ];
 
