@@ -6,6 +6,13 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreReservationRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'type' => $this->type ?? 'client',
+        ]);
+    }
+
     public function authorize(): bool
     {
         return true;
@@ -18,7 +25,7 @@ class StoreReservationRequest extends FormRequest
             'space_id' => ['required', 'integer', 'exists:spaces,id'],
             'start' => ['required', 'date'],
             'end' => ['required', 'date', 'after:start'],
-            'type' => ['required', 'string', 'in:booking,block'],
+            'type' => ['string', 'in:client,block'],
             'event_name' => ['string'],
         ];
     }
@@ -36,7 +43,6 @@ class StoreReservationRequest extends FormRequest
             'end.date' => 'The end date must be a valid date.',
             'end.after' => 'The end date must be after the start date.',
             'type.required' => 'The reservation type is required.',
-            'type.in' => 'The reservation type must be either booking or block.',
         ];
     }
 }
