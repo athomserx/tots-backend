@@ -13,8 +13,14 @@ Route::middleware('jwt')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
     Route::apiResource('reservations', ReservationController::class);
+
+    Route::get('/spaces', [SpaceController::class, 'index']);
+    Route::get('/spaces/{id}', [SpaceController::class, 'show']);
 });
 
 Route::middleware(['jwt', 'role:admin'])->group(function () {
-    Route::apiResource('spaces', SpaceController::class);
+    Route::post('/spaces', [SpaceController::class, 'store']);
+    Route::put('/spaces/{id}', [SpaceController::class, 'update']);
+    Route::patch('/spaces/{id}', [SpaceController::class, 'update']);
+    Route::delete('/spaces/{id}', [SpaceController::class, 'destroy']);
 });
