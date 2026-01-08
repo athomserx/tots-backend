@@ -9,9 +9,12 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 
 Route::middleware('jwt')->group(function () {
-  Route::get('/user', [AuthController::class, 'getUser']);
-  Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/user', [AuthController::class, 'getUser']);
+    Route::post('/logout', [AuthController::class, 'logout']);
 
-  Route::apiResource('spaces', SpaceController::class);
-  Route::apiResource('reservations', ReservationController::class);
+    Route::apiResource('reservations', ReservationController::class);
+});
+
+Route::middleware(['jwt', 'role:admin'])->group(function () {
+    Route::apiResource('spaces', SpaceController::class);
 });

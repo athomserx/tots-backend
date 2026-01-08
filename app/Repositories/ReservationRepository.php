@@ -14,6 +14,10 @@ class ReservationRepository
     {
         $query = Reservation::query();
 
+        if (isset($queryParams['user_id'])) {
+            $query->where('user_id', $queryParams['user_id']);
+        }
+
         $this->applyODataQuery($query, $queryParams);
 
         $pagination = $this->getODataPagination($queryParams);

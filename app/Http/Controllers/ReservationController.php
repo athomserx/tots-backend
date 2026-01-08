@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\RoleType;
 use App\Http\Requests\StoreReservationRequest;
 use App\Http\Requests\UpdateReservationRequest;
 use App\Http\Resources\ReservationCollection;
@@ -20,7 +21,16 @@ class ReservationController extends Controller
 
     public function index(Request $request): ReservationCollection
     {
+        $this->authorize('viewAny', \App\Models\Reservation::class);
+
+        $user = auth()->user();
         $queryParams = $request->query();
+
+        // Admins can see all reservations
+        if ($user->role_id === RoleType::CLIENT->value) {
+            $queryParams['user_id'] = $user->id;
+        }
+
         $reservations = $this->reservationService->getReservations($queryParams);
 
         return new ReservationCollection($reservations);
@@ -28,7 +38,16 @@ class ReservationController extends Controller
 
     public function store(StoreReservationRequest $request): JsonResponse
     {
-        $reservation = $this->reservationService->createReservation($request->validated());
+        $this->authorize('create', \App\Models\Reservation::class);
+
+        $data = $request->validated();
+
+        $user = auth()->user();
+        if ($user->role_id === RoleType::CLIENT->value) {
+            $data['user_id'] = $user->id;
+        }
+
+        $reservation = $this->reservationService->createReservation($data);
 
         return (new ReservationResource($reservation))
             ->response()
@@ -45,6 +64,8 @@ class ReservationController extends Controller
             ], Response::HTTP_NOT_FOUND);
         }
 
+        $this->authorize('view', $reservation);
+
         return new ReservationResource($reservation);
     }
 
@@ -57,6 +78,8 @@ class ReservationController extends Controller
                 'message' => 'Reservation not found',
             ], Response::HTTP_NOT_FOUND);
         }
+
+        $this->authorize('update', $reservation);
 
         $updatedReservation = $this->reservationService->updateReservation($reservation, $request->validated());
 
@@ -72,6 +95,8 @@ class ReservationController extends Controller
                 'message' => 'Reservation not found',
             ], Response::HTTP_NOT_FOUND);
         }
+
+        $this->authorize('delete', $reservation);
 
         $this->reservationService->deleteReservation($reservation);
 
