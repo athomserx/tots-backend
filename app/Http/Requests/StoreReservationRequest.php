@@ -19,6 +19,7 @@ class StoreReservationRequest extends FormRequest
             'start' => ['required', 'date'],
             'end' => ['required', 'date', 'after:start'],
             'type' => ['required', 'string', 'in:booking,block'],
+            'event_name' => ['string'],
         ];
     }
 

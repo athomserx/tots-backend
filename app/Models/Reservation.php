@@ -19,7 +19,8 @@ class Reservation extends Model
         'space_id',
         'start',
         'end',
-        'type'
+        'type',
+        'event_name'
     ];
 
     protected $casts = [
