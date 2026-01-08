@@ -69,7 +69,10 @@ class SpaceController extends Controller
             ], Response::HTTP_NOT_FOUND);
         }
 
-        return new SpaceResource($space);
+        $resource = new SpaceResource($space);
+        $resource->withoutWrapping();
+
+        return $resource;
     }
 
     /**
