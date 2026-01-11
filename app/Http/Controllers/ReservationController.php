@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateReservationRequest;
 use App\Http\Resources\ReservationCollection;
 use App\Http\Resources\ReservationResource;
 use App\Services\ReservationService;
+use App\Services\AvailabilityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -15,7 +16,8 @@ use Illuminate\Http\Response;
 class ReservationController extends Controller
 {
     public function __construct(
-        protected ReservationService $reservationService
+        protected ReservationService $reservationService,
+        protected AvailabilityService $availabilityService
     ) {
     }
 
@@ -45,6 +47,18 @@ class ReservationController extends Controller
         $user = auth()->user();
         if ($user->role_id === RoleType::CLIENT->value) {
             $data['user_id'] = $user->id;
+        }
+
+        $availability = $this->availabilityService->checkAvailability(
+            $data['space_id'],
+            $data['start'],
+            $data['end']
+        );
+
+        if (!$availability->isAvailable) {
+            return response()->json([
+                'message' => $availability->message,
+            ], $availability->statusCode);
         }
 
         $reservation = $this->reservationService->createReservation($data);
@@ -81,7 +95,22 @@ class ReservationController extends Controller
 
         $this->authorize('update', $reservation);
 
-        $updatedReservation = $this->reservationService->updateReservation($reservation, $request->validated());
+        $data = $request->validated();
+
+        $availability = $this->availabilityService->checkAvailability(
+            $data['space_id'] ?? $reservation->space_id,
+            $data['start'] ?? $reservation->start,
+            $data['end'] ?? $reservation->end,
+            $reservation->id
+        );
+
+        if (!$availability->isAvailable) {
+            return response()->json([
+                'message' => $availability->message,
+            ], $availability->statusCode);
+        }
+
+        $updatedReservation = $this->reservationService->updateReservation($reservation, $data);
 
         return new ReservationResource($updatedReservation);
     }
