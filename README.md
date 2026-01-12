@@ -10,6 +10,7 @@ En este archivo se describen algunos detalles del backend para el sistema de res
 
 -   `name`
 -   `description`
+-   `type`
 -   `price_per_hour`
 -   `capacity`
 -   `images`
@@ -32,6 +33,7 @@ En este archivo se describen algunos detalles del backend para el sistema de res
 -   `start`
 -   `end`
 -   `type`
+-   `event_name`
 -   `created_at`
 
 **availability_rules**
@@ -58,7 +60,18 @@ En este archivo se describen algunos detalles del backend para el sistema de res
 
 ## Corriendo el proyecto
 
+Para correr el proyecto, se debe tener instalado composer y php.
+
+1. Clonar este repositorio: `git clone https://github.com/athomserx/tots-backend.git`
+2. Instalar dependencias con `composer install`
+3. Crear archivo `.env` en la raiz del proyecto y copiar el contenido de `.env.example`.
+4. Generar la key para JWT con `php artisan jwt:secret`
+5. Crear una base de datos postgresql y que las credenciales coincidan con las del archivo `.env`
+6. Correr las migraciones con `php artisan migrate`
+7. Correr los seeders con `php artisan db:seed`
+8. Iniciar el servidor con `php artisan serve`
+
 ### usuario admin
 
--   email: admin@admin.com
--   password: password
+-   Email: `admin@admin.com`
+-   Contraseña: `password`
