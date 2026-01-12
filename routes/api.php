@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AvailabilityController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\SpaceController;
 use Illuminate\Support\Facades\Route;
@@ -16,6 +17,7 @@ Route::middleware('jwt')->group(function () {
 
     Route::get('/spaces', [SpaceController::class, 'index']);
     Route::get('/spaces/{id}', [SpaceController::class, 'show']);
+    Route::get('/spaces/{spaceId}/available-slots', [AvailabilityController::class, 'getAvailableSlots']);
 });
 
 Route::middleware(['jwt', 'role:admin'])->group(function () {

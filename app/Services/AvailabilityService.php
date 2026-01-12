@@ -78,4 +78,126 @@ class AvailabilityService
 
     return new AvailabilityResult(true);
   }
+
+  /**
+   * Get all available time slots for a space from current date until one month ahead
+   *
+   * @param int $spaceId
+   * @param int $slotDurationMinutes Duration of each time slot in minutes (default: 60)
+   * @return array Array of available time slots grouped by date
+   */
+  public function getAvailableSlots(int $spaceId, int $slotDurationMinutes = 60): array
+  {
+    $startDate = Carbon::now()->startOfDay();
+    $endDate = Carbon::now()->addMonth()->endOfDay();
+    $availableSlots = [];
+
+    for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
+      $dateString = $date->toDateString();
+      $dayOfWeek = $date->dayOfWeek;
+      $daySlots = [];
+
+      $operatingHours = $this->getOperatingHours($spaceId, $dateString, $dayOfWeek);
+
+      if (!$operatingHours) {
+        continue;
+      }
+
+      if ($operatingHours['is_closed']) {
+        continue;
+      }
+      $currentSlot = Carbon::parse($dateString . ' ' . $operatingHours['open_time']);
+      $closeTime = Carbon::parse($dateString . ' ' . $operatingHours['close_time']);
+
+      if ($closeTime->lt($currentSlot)) {
+        $closeTime->addDay();
+      }
+
+      while ($currentSlot->lt($closeTime)) {
+        $slotEnd = $currentSlot->copy()->addMinutes($slotDurationMinutes);
+
+        if ($slotEnd->gt($closeTime)) {
+          break;
+        }
+        $availability = $this->checkAvailability(
+          $spaceId,
+          $currentSlot->toIso8601String(),
+          $slotEnd->toIso8601String()
+        );
+
+        if ($availability->isAvailable) {
+          $daySlots[] = [
+            'start' => $currentSlot->toIso8601String(),
+            'end' => $slotEnd->toIso8601String(),
+            'start_time' => $currentSlot->format('H:i'),
+            'end_time' => $slotEnd->format('H:i'),
+          ];
+        }
+
+        $currentSlot->addMinutes($slotDurationMinutes);
+      }
+
+      if (!empty($daySlots)) {
+        $availableSlots[] = [
+          'date' => $dateString,
+          'day_of_week' => $dayOfWeek,
+          'slots' => $daySlots,
+        ];
+      }
+    }
+
+    return $availableSlots;
+  }
+
+  /**
+   * Get operating hours for a specific date
+   *
+   * @param int $spaceId
+   * @param string $dateString
+   * @param int $dayOfWeek
+   * @return array|null Returns array with 'open_time', 'close_time', 'is_closed' or null if no rules
+   */
+  private function getOperatingHours(int $spaceId, string $dateString, int $dayOfWeek): ?array
+  {
+    $exception = ExceptionModel::where('date', $dateString)
+      ->where(function ($query) use ($spaceId) {
+        $query->where('space_id', $spaceId)
+          ->orWhereNull('space_id');
+      })
+      ->orderByRaw('CASE WHEN space_id IS NOT NULL THEN 1 ELSE 2 END')
+      ->first();
+
+    if ($exception) {
+      if ($exception->is_closed) {
+        return ['is_closed' => true];
+      }
+
+      if ($exception->override_open_time && $exception->override_close_time) {
+        return [
+          'open_time' => $exception->override_open_time,
+          'close_time' => $exception->override_close_time,
+          'is_closed' => false,
+        ];
+      }
+    }
+
+    $rule = AvailabilityRule::where('day_of_week', $dayOfWeek)
+      ->where('is_active', true)
+      ->where(function ($query) use ($spaceId) {
+        $query->where('space_id', $spaceId)
+          ->orWhereNull('space_id');
+      })
+      ->orderByRaw('CASE WHEN space_id IS NOT NULL THEN 1 ELSE 2 END')
+      ->first();
+
+    if (!$rule) {
+      return null;
+    }
+
+    return [
+      'open_time' => $rule->open_time,
+      'close_time' => $rule->close_time,
+      'is_closed' => false,
+    ];
+  }
 }
