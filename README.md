@@ -75,3 +75,5 @@ Para correr el proyecto, se debe tener instalado composer y php.
 
 -   Email: `admin@admin.com`
 -   Contraseña: `password`
+
+Para crear un usuario de cliente, se debe usar la página de registro del frontend.
